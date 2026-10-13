@@ -1,4 +1,11 @@
+const dns = require("dns");
+
+// Prefer IPv4 when resolving SMTP hostnames.
+// This helps avoid IPv6 connection errors on Render.
+dns.setDefaultResultOrder("ipv4first");
+
 require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db");
@@ -15,6 +22,7 @@ app.use(
     origin: process.env.CLIENT_URL || "http://localhost:5173",
   })
 );
+
 app.use(express.json());
 
 app.get("/api/health", (req, res) => {
@@ -26,9 +34,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/quotations", quotationRoutes);
 app.use("/api", cartRoutes); // exposes /api/cart and /api/wishlist
 
-// Catch-all error handler -- keeps a thrown error from ever crashing
-// the whole process; every controller already try/catches its own
-// errors, this is just a last-resort net.
+// Catch-all error handler
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ message: "Something went wrong" });
