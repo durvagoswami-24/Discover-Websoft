@@ -9,18 +9,22 @@ const nodemailer = require("nodemailer");
 // Works with any standard SMTP provider, not just Hostinger -- just
 // change EMAIL_HOST/EMAIL_PORT/EMAIL_SECURE in .env if you switch later.
 function getTransporter() {
-  const emailPassword = process.env.EMAIL_APP_PASSWORD || process.env.EMAIL_PASSWORD;
+  const emailPassword =
+    process.env.EMAIL_APP_PASSWORD || process.env.EMAIL_PASSWORD;
+
   return nodemailer.createTransport({
     host: process.env.EMAIL_HOST || "smtp.hostinger.com",
-    port: Number(process.env.EMAIL_PORT) || 465,
-    // true for port 465 (SSL), false for port 587 (STARTTLS)
-    secure: process.env.EMAIL_SECURE
-      ? process.env.EMAIL_SECURE === "true"
-      : true,
+    port: Number(process.env.EMAIL_PORT) || 587,
+    secure: false,
+
     auth: {
       user: process.env.EMAIL_USER,
       pass: emailPassword,
     },
+
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
   });
 }
 

@@ -68,21 +68,29 @@ async function createQuotation(req, res) {
 
     // The quotation is saved first. Email failures are reported separately
     // so they don't hide a successfully stored request from the customer.
-    let emailStatus = { customerEmailSent: false };
-    try {
-      emailStatus = await sendQuotationEmails({
-        quotation,
-        customerName: quotation.customerName,
-        customerEmail: quotation.customerEmail,
-        planName: quotation.planName,
-      });
-    } catch (emailError) {
-      // The quotation is already saved. Report delivery failure separately
-      // so the frontend doesn't claim an email was sent.
-      console.error("Quotation saved but email delivery failed:", emailError);
-    }
+    // Return the successful quotation response immediately.
+// Email delivery should not block quotation submission.
+res.status(201).json({
+  quotation,
+  customerEmailSent: false,
+});
 
-    res.status(201).json({ quotation, ...emailStatus });
+// Send emails in the background.
+sendQuotationEmails({
+  quotation,
+  customerName: quotation.customerName,
+  customerEmail: quotation.customerEmail,
+  planName: quotation.planName,
+})
+  .then((emailStatus) => {
+    console.log("Quotation email process completed:", emailStatus);
+  })
+  .catch((emailError) => {
+    console.error(
+      "Quotation saved but email delivery failed:",
+      emailError
+    );
+  });
   } catch (err) {
     res
       .status(500)
